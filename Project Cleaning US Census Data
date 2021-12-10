@@ -1,0 +1,49 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import codecademylib3_seaborn
+import glob
+
+df_list = []
+file_list = glob.glob("states*.csv")
+for i in file_list:
+  df_list.append(pd.read_csv(i))
+us_census = pd.concat(df_list)
+
+us_census = pd.melt(us_census, id_vars = ["State", "TotalPop", "Income", "GenderPop"], value_vars = ["Hispanic", "White", "Black", "Native", "Asian", "Pacific"], var_name = "Race", value_name = "Percentage")
+
+us_census.Percentage = pd.to_numeric(us_census.Percentage.str[:-1])
+us_census.Income = pd.to_numeric(us_census.Income.str[1:])
+us_census['gender_split'] = us_census.GenderPop.str.split('_')
+us_census['Male'] = us_census.gender_split.apply(lambda x: x[0][:-1])
+us_census['Female'] = us_census.gender_split.apply(lambda x: x[1][:-1])
+us_census.Male = pd.to_numeric(us_census.Male)
+us_census.Female = pd.to_numeric(us_census.Female)
+us_census = us_census[['State', 'TotalPop', 'Male', 'Female', 'Income', 'Race', 'Percentage']]
+# print(us_census.head())
+# print(us_census.dtypes)
+# plt.scatter(us_census.Female, us_census.Income)
+# plt.show()
+us_census['Female'].fillna(us_census.TotalPop - us_census.Male, inplace=True)
+us_census = us_census.drop_duplicates()
+# plt.scatter(us_census.Female, us_census.Income)
+# plt.show()
+
+# print(us_census.head())
+# print(us_census.groupby("State").Percentage.sum())
+
+is_na = us_census.Percentage.isna().reset_index()
+# print(is_na.groupby("Percentage").Percentage.count())
+print(is_na[is_na.Percentage == True])
+# print(us_census.Race.unique())
+# print(by_state)
+us_census['Percentage'].fillna(1, inplace = True)
+print(us_census.iloc[260])
+
+plt.hist(us_census.Percentage, 15)
+plt.hist(us_census[us_census.Race == 'Asian'].Percentage, 15)
+plt.hist(us_census[us_census.Race == 'Black'].Percentage, 15)
+plt.hist(us_census[us_census.Race == 'White'].Percentage, 15)
+plt.hist(us_census[us_census.Race == 'Native'].Percentage, 15)
+plt.hist(us_census[us_census.Race == 'Pacific'].Percentage, 15)
+plt.show()
